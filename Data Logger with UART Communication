@@ -1,0 +1,148 @@
+
+#include <Temperature Data Logger.h>
+
+
+#FUSES WDT                    //No Watch Dog Timer
+#FUSES NOBROWNOUT               //No brownout reset
+#FUSES NOLVP                    //No low voltage prgming, B3(PIC16) or B5(PIC18) used for I/O
+
+#use delay(crystal=20000000)
+
+#include <stdio.h>
+#byte lcd=0x08
+#byte tlcd=0x88
+
+
+#bit button = 0x07.2
+#bit tbutton = 0x87.2
+
+#bit button1 = 0x07.3
+#bit tbutton1 = 0x87.3
+
+
+#bit rs=0x07.0
+#bit trs=0x87.0
+#bit en=0x07.1
+#bit ten=0x87.1
+
+#byte adcon0=0x1f
+#byte adcon1=0x9f
+#byte adresh=0x1e
+#byte adresl=0x9e
+#bit go_done=0x1f.2
+
+#byte EECON1=0X18C
+#byte EECON2=0X18D
+#byte EEDATA=0X10C
+#byte EEADR=0X10D
+#bit EEIF=0X0D.4
+#bit WREN=0X18C.2
+#bit WR=0X18C.1
+#bit rd = 0x18c.0 
+#byte intcon=0x0b 
+char my_data[15];
+void display(unsigned int a,unsigned int b);
+#INT_EXT
+void external()
+{
+{
+display(0x01,0);
+char s[]="interrupt occured!";
+for(int o=0;o<strlen(s);o++)
+{
+display(s[o],1);
+}
+
+ for(int i =0;i<7;i++)
+      {
+      EEADR=0x68+i;
+      EEDATA=s[i]; 
+      
+      WREN=1;
+      EECON2=0X55;
+      EECON2=0XAA;
+      WR=1;
+      while(EEIF==0);
+      EEIF=0;
+      WREN=0;
+      WR=0;
+      }
+     display(0x01,0);
+         }
+}
+         
+
+
+
+void main()
+{
+   long int result,i,my_adresh=0;
+      
+   
+   long int temp;
+    intcon=0xd0;
+   trs=ten=tlcd=0;//output
+    tbutton = 1; 
+     tbutton1 = 1; 
+   adcon0=0x01;//adc on
+   adcon1=0x80;//right justified
+   go_done=1;
+   display(0x0e,0);//on command
+   display('a',1);//ata,rs=1
+   while(1)
+   {
+  
+  // if(button1==1)
+   
+       while(go_done==1);//wait==0 
+       go_done=1;
+       my_adresh=adresh;
+       result=adresl|my_adresh<<8;//adresh size 8 bit <<8
+       temp=(result*4.88281);
+       temp=temp/10;
+       
+       display(0x80,0);
+       sprintf(my_data,"temp:%lu",temp);//int to string array
+      
+       for(i=0;my_data[i]!='\0';i++)
+       {
+       
+       
+         display(my_data[i],1);
+       }
+   }
+         
+        /* if(button==1)
+         {
+     
+  
+   {
+  /* if(button1==1)
+   {
+       for( i =0;i<7;i++)
+      {
+      EEADR=0x00+i;
+      RD=1;
+      my_data[i]=EEDATA;
+      display(my_data[i],1);
+     delay_ms(10);  
+      
+      }
+      display(0x01,0);
+   }*/
+//}
+
+ //  }
+//}*/
+}
+       
+ 
+void display(unsigned int a,unsigned int b)
+{
+   lcd=a;//lcd=portc 8 bit a must 8  bit 
+   rs=b;//b single 
+   en=1;
+   delay_ms(10);
+   en=0;
+   delay_ms(10);
+}
