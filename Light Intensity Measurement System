@@ -1,0 +1,108 @@
+#include <Light Intensity Measurement System.h>
+#include <stdio.h>
+
+#byte INTCON =0X0B//8 bit
+#bit TMR1IF=0XC.0
+#bit TMRIEN=0X8C.0
+#byte TMR1L=0X0E
+#byte TMR1H=0X0F
+#byte T1CON=0X10
+
+
+#byte lcd=0x06
+#byte tlcd=0x86
+
+#bit led=0x07.3
+#bit tled=0x87.3
+#bit led1=0x08.0
+#bit tled1=0x88.0
+#bit rs=0x07.0
+#bit trs=0x87.0
+#bit en=0x07.1
+#bit ten=0x87.1
+
+#byte adcon0=0x1f
+#byte adcon1=0x9f
+#byte adresh=0x1e
+#byte adresl=0x9e
+#bit go_done=0x1f.2
+long int result,my_adresh=0;
+   char my_data[15];
+   long int temp;
+
+void display(unsigned int a,unsigned int b);
+
+long int i;
+#int_TIMER1
+void magic()
+{
+   i++;//0+1+2+3+4+5+..+100 10ms 100 times =1000ms 
+   if(i>99)
+   {
+   
+      i=0;
+      led1=led1^1;
+      display(0x80,0);
+      adcon0=0x01;//adc on
+   adcon1=0x80;//right justified
+   go_done=1;
+   while(go_done==1);//wait==0 
+       go_done=1;
+       my_adresh=adresh;
+       result=adresl|my_adresh<<8;//adresh size 8 bit <<8
+       sprintf(my_data,"volt:%04lu",result);//int to string array
+      // display(0x85,0);
+       for(i=0;my_data[i]!='\0';i++)
+       {
+         display(my_data[i],1);
+       }
+     // 
+
+}
+TMR1IF=0;
+TMR1L=0XCb;
+      TMR1H=0XF3;
+}
+void main()
+
+{
+   tled=tled1=0;
+   TMRIEN=1;
+   INTCON=0XC0;//0b11000000
+   T1CON=0X31;
+   //0XF3CA;
+   TMR1L=0XCb;
+   TMR1H=0XF3;
+     
+   trs=ten=tlcd=0;//output
+   
+   adcon0=0x01;//adc on
+   adcon1=0x80;//right justified
+   go_done=1;
+   display(0x0e,0);//on command
+   display('a',1);//ata,rs=1
+   while(1)
+   {
+       
+       if(result>=512)
+       led=1;
+       else
+       led=0;
+       //result long int to string
+       //result=123; 
+       //my_data[0]='1' ,my_data[1]='2'
+       
+   }    
+}
+ 
+void display(unsigned int a,unsigned int b)
+{
+   lcd=a;//lcd=portc 8 bit a must 8  bit 
+   rs=b;//b single 
+   en=1;
+   delay_ms(10);
+   en=0;
+   delay_ms(10);
+}
+
+
