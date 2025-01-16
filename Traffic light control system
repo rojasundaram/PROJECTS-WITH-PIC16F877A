@@ -1,0 +1,59 @@
+#byte sig12=0x06
+#byte tsig12=0x86
+#bit button1=0x08.1
+#bit tbutton1=0x88.1
+#bit button2=0x08.2
+#bit tbutton2=0x88.2
+#bit button3=0x08.3
+#bit tbutton3=0x88.3
+#bit button4=0x08.4
+#bit tbutton4=0x88.4
+#byte sig34=0x07
+#byte tsig34=0x87
+char s12[]={0x14,0x21,0x09,0x0a};
+char s34[]={0x24,0x22,0x11,0x0c};
+
+void main()
+{
+tsig12=tsig34=0;
+tbutton1=tbutton2=tbutton3=tbutton4=1;
+
+ while(TRUE)
+  {
+ if((button1==0)&&(button2==0)&&(button3==0)&&(button4==0))
+ {
+  for(int j=0,i=0;j<4;j++,i++)
+  {
+   
+  sig12=s12[i];
+  //delay_ms(1000);
+  sig34=s34[j];
+  delay_ms(10);
+ 
+   }
+   }
+ if(button1==1)
+ {
+ 
+ sig12=s12[0];
+ sig34=s34[0];
+ }
+ if(button2==1)
+ {
+ 
+ sig12=s12[1];
+ sig34=s34[1];
+ }
+ if(button3==1)
+{
+ sig12=s12[2];
+ sig34=s34[2];
+}
+ if(button4==1)
+ {
+  //delay_ms(1000);
+  sig12=s12[3];
+  sig34=s34[3];
+ }
+  }
+}
