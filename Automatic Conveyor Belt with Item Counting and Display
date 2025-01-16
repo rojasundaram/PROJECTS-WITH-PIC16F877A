@@ -1,0 +1,92 @@
+#include <AutomaticConveyor Belt with Item Counting and Display.h>
+#include<stdio.h>
+#include<string.h>
+
+#bit infrared=0x07.3
+#bit tinfrared=0x87.3
+
+#byte lcd=0x06
+#byte tlcd=0x86
+#bit rs=0x07.0
+#bit trs=0x87.0
+#bit rw=0x07.1
+#bit trw=0x87.1
+#bit en=0x07.2
+#bit ten=0x87.2
+
+#bit led=0x07.4
+#bit tled=0x87.4
+#bit button=0x07.5
+#bit tbutton=0x87.5
+
+#bit pos=0x07.6
+#bit tpos=0x87.6
+#bit neg=0x07.7
+#bit tneg=0x87.7
+
+void display(char x,int y)
+{
+lcd=x;
+rs=y;
+rw=0;
+en=1;
+delay_ms(10);
+en=0;
+}
+
+void main()
+{
+unsigned int count = 0;
+char str[10];
+int last_ir=0;
+tpos=tneg=0;
+tlcd=trs=ten=trw=0;
+tled=0;
+tinfrared=tbutton=1;
+display(0x0E, 0);  // Turn on display
+    display(0x38, 0);  
+    display(0x01, 0);  
+    delay_ms(10);
+   while(TRUE)
+   {
+   if(button==1)
+   {
+      pos=1;
+      neg=0;
+      led=1;
+     
+      
+      if (infrared == 1 && last_ir == 0) {
+                count++;
+                sprintf(str, "Items: %03u", count);
+                display(0x80, 0);  
+                for (int j = 0; str[j] != '\0'; j++) {
+                    display(str[j], 1);  
+                }
+
+                last_ir = 1;  
+                delay_ms(300);      
+            }
+
+            
+            if (infrared == 0) {
+                last_ir = 0;
+            }
+
+        }
+        
+        else {
+        count=0;
+        sprintf(str, "Items: %03u", count);
+                display(0x80, 0);  
+                for (int j = 0; str[j] != '\0'; j++) {
+                    display(str[j], 1);  
+                }
+
+            
+            pos = 0;
+            neg = 0;
+            led = 0;  
+        }
+    }
+}
