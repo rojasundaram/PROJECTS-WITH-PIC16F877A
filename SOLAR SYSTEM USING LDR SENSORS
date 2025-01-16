@@ -1,0 +1,149 @@
+#include <ldrsolar.h>
+
+#byte lcd=0x07
+#byte tlcd=0x87
+
+#byte stepper=0x08
+#byte tstepper=0x88
+
+
+#bit rs=0x06.0
+#bit trs=0x86.0
+#bit en=0x06.1
+#bit ten=0x86.1
+
+#byte adcon0=0x1f
+#byte adcon1=0x9f
+#byte adresh=0x1e
+#byte adresl=0x9e
+#bit go_done=0x1f.2
+void display(unsigned int a,unsigned int b)
+{
+   lcd=a;//lcd=portc 8 bit a must 8  bit 
+   rs=b;//b single 
+   en=1;
+   delay_ms(10);
+   en=0;
+   delay_ms(10);
+}
+
+void main()
+{
+  
+   char val[10],i;
+   
+   tlcd=0;
+   trs=0;
+   ten=0;
+
+ 
+   display(0x0e,0);
+   display(0x38,0);
+   display(0x80,0);
+   display('a',1);
+   
+   tstepper=0;
+   unsigned long int data1,data2,data3,data4,my_adresh;
+   ADCON1=0X80;
+   while(1)
+   {
+   //channel 0
+     ADCON0=0X00;
+     ADCON0=0X00;
+     ADCON0=0X01; // sensor in ra0
+     delay_ms(10);
+     GO_DONE=1;
+     while(GO_DONE==1);
+            my_adresh=adresh;
+       data1=adresl|my_adresh<<8;
+
+     sprintf(val,"0=%04lu ",data1);
+     display(0x80,0);//first col
+     for(i=0;val[i]!='\0';i++)
+     {
+    
+      display(val[i],1);
+ 
+     }
+ //channel 1
+ 
+     ADCON0=0X08;
+     ADCON0=0X08;
+     ADCON0=0X09; // ra1
+     delay_ms(10);
+     GO_DONE=1;
+     while(GO_DONE==1);
+      my_adresh=adresh;
+      data2=adresl|my_adresh<<8;
+     sprintf(val,"1=%04lu ",data2);
+     display(0xc0,0);//first col
+     for(i=0;val[i]!='\0';i++)
+     {
+     
+      display(val[i],1);
+     
+     }
+     //channel 3
+     ADCON0=0X10;
+     ADCON0=0X10;
+     ADCON0=0X11; // sensor in ra2
+     delay_ms(10);
+     GO_DONE=1;
+     while(GO_DONE==1);
+            my_adresh=adresh;
+       data3=adresl|my_adresh<<8;
+
+     sprintf(val,"2=%04lu ",data3);
+     display(0x88,0);//first col
+     for(i=0;val[i]!='\0';i++)
+     {
+    
+      display(val[i],1);
+ 
+     }
+     //channel 4
+     ADCON0=0X18;
+     ADCON0=0X18;
+     ADCON0=0X19;//sensor in ra3
+     delay_ms(10);
+     GO_DONE=1;
+     while(GO_DONE==1);
+            my_adresh=adresh;
+       data4=adresl|my_adresh<<8;
+
+     sprintf(val,"3=%04lu ",data4);
+     display(0xc8,0);//first col
+     for(i=0;val[i]!='\0';i++)
+     {
+    
+      display(val[i],1);
+ 
+     }
+ if (data1 >= data2 && data1 >= data3 && data1 >= data4)
+{
+    stepper = 0x01;  
+    delay_ms(1000);
+    //stepper=0x00;
+    
+}
+else if (data2 >= data1 && data2 >= data3 && data2 >= data4)
+{
+    stepper = 0x02;  
+    delay_ms(1000);
+}
+else if (data3 >= data1 && data3 >= data2 && data3 >= data4)
+{
+    stepper = 0x04;  
+    delay_ms(1000);
+    
+}
+else if (data4 >= data1 && data4 >= data2 && data4 >= data3)
+{
+    stepper = 0x08;  
+    delay_ms(1000);
+    //stepper=0x00;
+}
+
+     
+   }
+}
