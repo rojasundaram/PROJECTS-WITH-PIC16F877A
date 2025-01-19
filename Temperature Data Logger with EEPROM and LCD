@@ -73,7 +73,6 @@ display(s[o],1);
          
 
 
-
 void main()
 {
    long int result,i,my_adresh=0;
