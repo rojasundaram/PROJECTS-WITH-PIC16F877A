@@ -1,0 +1,273 @@
+
+#include<string.h>
+#include<string.h>
+#byte TXSTA=0x98
+#byte RCSTA=0x18
+#byte SPBRG=0x99
+#byte TXREG=0x19
+#bit TXIF=0x0c.4
+#byte intcon=0x0b
+
+#bit c1=0x08.0
+#bit tc1=0x88.0
+#bit c2=0x06.1
+#bit tc2=0x86.1
+#bit c3=0x06.2
+#bit tc3=0x86.2
+#bit r1=0x06.3
+#bit tr1=0x86.3
+#bit r2=0x06.4
+#bit tr2=0x86.4
+#bit r3=0x06.5
+#bit tr3=0x86.5
+#bit r4=0x06.6
+#bit tr4=0x86.6
+
+
+#use i2c(master, SDA=pin_c4,SCL=pin_c3)
+
+unsigned int dec_bcd(unsigned int data);
+unsigned int bcd_dec(unsigned int data);
+unsigned int dec_bcd(unsigned int data)
+{
+   unsigned int result;
+   result=(((data/10)<<4)+(data%10));
+   return result;
+}
+ 
+unsigned int bcd_dec(unsigned int data)
+{
+   unsigned int result;
+   result=(((data>>4)*10)+(data&0x0f));
+   return result;
+}
+ int keypad();
+ char intr[]="interupt";
+#INT_EXT
+void external()
+{
+for(int p=0;p<strlen(intr);p++)
+   {
+   TXREG=intr[p];
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+   }
+int a,b,c; 
+
+a=keypad();
+b=keypad();
+c=(a*10)+b;
+i2c_start();
+     i2c_write(0xd0);//slave address rtc=0xd0 +write bit
+     i2c_write(0x00);//location address sec 
+
+i2c_write(dec_bcd(c));
+
+     
+     i2c_stop();
+}
+
+
+
+
+int keypad()
+{
+  while(true)
+  {
+     r1=1;
+     r2=r3=r4=0;
+     if(c1==1)
+     {
+       while(c1==1);
+       return 1;
+     }
+     if(c2==1)
+     {
+       while(c2==1);
+       return 2;
+     }
+     if(c3==1)
+     {
+       while(c3==1);
+       return 3;
+     }
+     r2=1;
+     r1=r3=r4=0;
+     if(c1==1)
+     {
+       while(c1==1);
+       return 4;
+     }
+     if(c2==1)
+     {
+       while(c2==1);
+       return 5;
+     }
+     if(c3==1)
+     {
+       while(c3==1);
+       return 6;
+     }
+     r3=1;
+     r2=r1=r4=0;
+     if(c1==1)
+     {
+       while(c1==1);
+       return 7;
+     }
+     if(c2==1)
+     {
+       while(c2==1);
+       return 8;
+     }
+     if(c3==1)
+     {
+       while(c3==1);
+       return 9;
+     }
+     r4=1;
+     r2=r3=r1=0;
+    
+     }
+     if(c2==1)
+     {
+       while(c2==1);
+       return 0;
+     }
+     
+  }
+
+void  main()
+{
+char time[]="time:";
+int a,b;
+tc1=tc2=tc3=1;
+tr1=tr2=tr3=tr4=0;
+intcon=0xd0;
+TXSTA=0b00100100;
+RCSTA=0b10010000;
+SPBRG=64;
+
+   unsigned int read_value=0,sec=0;
+     i2c_start();
+     i2c_write(0xd0);//slave address rtc=0xd0 +write bit
+     i2c_write(0x00);//location address sec 
+     i2c_write(dec_bcd(17));//dec 
+     i2c_stop();
+        i2c_start();
+     i2c_write(0xd0);//slave address rtc=0xd0 +write bit
+     i2c_write(0x01);//location address sec 
+     i2c_write(dec_bcd(29));//dec 
+     i2c_stop();
+        i2c_start();
+     i2c_write(0xd0);//slave address rtc=0xd0 +write bit
+     i2c_write(0x02);//location address sec 
+     i2c_write(dec_bcd(02));//dec 
+     i2c_stop();
+        i2c_start();
+     i2c_write(0xd0);//slave address rtc=0xd0 +write bit
+     i2c_write(0x04);//location address sec 
+     i2c_write(dec_bcd(06));//dec 
+     i2c_stop();
+        i2c_start();
+     i2c_write(0xd0);//slave address rtc=0xd0 +write bit
+     i2c_write(0x05);//location address sec 
+     i2c_write(dec_bcd(10));//dec 
+     i2c_stop();
+        i2c_start();
+     i2c_write(0xd0);//slave address rtc=0xd0 +write bit
+     i2c_write(0x06);//location address sec 
+     i2c_write(dec_bcd(25));//dec 
+     i2c_stop();
+while(1)
+  {  for(int i=0;i<strlen(time);i++)
+   {
+   TXREG=time[i];
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+   }
+//hour
+  //paricular address sec 0x00 min 0x01
+     i2c_start();
+     i2c_write(0xd0);//slave address rtc=0xd0 +write bit
+     i2c_write(0x02);//location address sec = particular address 
+     i2c_start();
+     i2c_write(0xd1);//slave address rtc=0xd1 +read bit
+     read_value=i2c_read(0);
+     
+     sec=bcd_dec(read_value);
+     a=sec/10;
+     b=sec%10;
+   
+   TXREG=a+0x30;
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+    TXREG=b+0x30;
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+    TXREG=":";
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+     i2c_stop();
+     delay_ms(500);
+ //MINUTE    
+      i2c_start();
+
+
+i2c_start();
+i2c_write(0xd0);
+i2c_write(0x01);
+i2c_start();
+i2c_write(0xd1);
+read_value=i2c_read(0);
+sec=bcd_dec(read_value);
+a=sec/10;
+b=sec%10;
+ TXREG=a+0x30;
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+    TXREG=b+0x30;
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+    TXREG=":";
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+i2c_stop();
+delay_ms(500);
+//second
+
+i2c_start();
+i2c_write(0xd0);
+i2c_write(0x00);
+i2c_start();
+i2c_write(0xd1);
+read_value=i2c_read(0);
+sec=bcd_dec(read_value);
+a=sec/10;
+b=sec%10;
+
+ TXREG=a+0x30;
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+    TXREG=b+0x30;
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+    TXREG=":";
+   while(TXIF==0);
+   TXIF=0;
+   delay_ms(10);
+
+i2c_stop();
+delay_ms(500);
+  }  
+}
